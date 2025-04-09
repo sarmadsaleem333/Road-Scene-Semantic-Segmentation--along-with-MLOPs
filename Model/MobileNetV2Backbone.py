@@ -1,7 +1,4 @@
 import torch.nn as nn
-import torchvision.models as models
-from torchsummary import summary
-
 import torch
 
 
@@ -20,14 +17,6 @@ class MobileNetV2Backbone (nn.Module):
         return low_feat,high_feat
     
 
-
-# model = MobileNetV2Backbone()
-
-
-
-# dummy_input = torch.randn(5, 3, 128, 128)
-
-# low_feat, high_feat = model(dummy_input)
 
 # # Print output shapes
 # print("Low-level feature shape:", low_feat.shape)
