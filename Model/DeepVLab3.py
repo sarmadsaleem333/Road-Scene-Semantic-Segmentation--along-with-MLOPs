@@ -13,16 +13,17 @@ class DeepLabV3Plus(nn.Module):
         self.decoder = Decoder(low_channels=24, out_channels=256, num_classes=num_classes)
 
     def forward(self, x):
+        input_size=x.shape[2:]
         low, high = self.backbone(x)
         high = self.aspp(high)
         x = self.decoder(low, high)
-        x = F.interpolate(x, size=(x.shape[2]*4, x.shape[3]*4), mode='bilinear', align_corners=False)
+        # x = F.interpolate(x, size=(x.shape[2]*4, x.shape[3]*4), mode='bilinear', align_corners=False)
+        x = F.interpolate(x, size=input_size, mode='bilinear', align_corners=False)
+
         return x
 
 
 model=DeepLabV3Plus(num_classes=19)
-dummy_input = torch.randn(5, 3, 128, 128)
+dummy_input = torch.randn(5, 3, 512, 512)
 output = model(dummy_input)
 print("Output shape:", output.shape)
-print("Model summary:") 
-print(model)
