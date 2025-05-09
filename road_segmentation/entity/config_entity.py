@@ -1,5 +1,7 @@
 
+
 from dataclasses import dataclass
+
 @dataclass
 class DataIngestionConfig:
     train_image_dir: str
@@ -8,17 +10,18 @@ class DataIngestionConfig:
     val_label_dir: str
     test_image_dir: str
     test_label_dir: str
+    batch_size: int  
 
 @dataclass
 class ModelTrainerConfig:
     model_name: str
+    model_path: str
     num_classes: int
     learning_rate: float
     weight_decay: float
     batch_size: int
-    num_epochs: int
+    epochs: int
 
-
+@dataclass
 class ModelEvaluationConfig:
-    def __init__(self, num_classes: int = 19):
-        self.num_classes = num_classes
+    num_classes: int = 19

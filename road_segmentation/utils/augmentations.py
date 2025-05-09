@@ -23,5 +23,3 @@ def get_val_augmentation():
                     max_pixel_value=255.0),
         ToTensorV2()
     ])
-
-

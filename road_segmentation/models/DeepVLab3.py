@@ -1,10 +1,13 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-from  ASPP import ASPPModule as ASPP
-from  Decoder import Decoder
+# from  ASPP import ASPPModule as ASPP
+# from  Decoder import Decoder
 
-from MobileNetV2Backbone import MobileNetV2Backbone
+# from MobileNetV2Backbone import MobileNetV2Backbone
+from .ASPP import ASPPModule as ASPP
+from .Decoder import Decoder
+from .MobileNetV2Backbone import MobileNetV2Backbone
 
 class DeepLabV3Plus(nn.Module):
     def __init__(self, num_classes):

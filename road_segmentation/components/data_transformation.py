@@ -1,8 +1,8 @@
-from utils.dataset import CityscapesDataset
-from utils.augmentations import get_train_augmentation,get_val_augmentation
-from entity.artifact_entity import DataIngestionArtifact, DataTransformationArtifact
-from entity.config_entity import DataIngestionConfig
-from exception import RoadSegmentationException
+from road_segmentation.utils.dataset import CityscapesDataset
+from road_segmentation.utils.augmentations import get_train_augmentation,get_val_augmentation
+from road_segmentation.entity.artifact_entity import DataIngestionArtifact, DataTransformationArtifact
+from road_segmentation.entity.config_entity import DataIngestionConfig
+from road_segmentation.exception import RoadSegmentationException
 import sys
 import os
 from road_segmentation.logger import logging
@@ -20,21 +20,22 @@ class DataTransformation:
             logging.info("Data Transformation started")
             
             train_dataset = CityscapesDataset(
-                image_dir=self.ingestion_artifact.train_images_path,
-                label_dir=self.ingestion_artifact.train_labels_path,
-                transform=get_train_augmentation()
+                image_folder=self.ingestion_artifact.train_images_path,
+                label_folder=self.ingestion_artifact.train_labels_path,
+                augmentation=get_train_augmentation()
             )
+
             
             val_dataset = CityscapesDataset(
-                image_dir=self.ingestion_artifact.val_images_path,
-                label_dir=self.ingestion_artifact.val_labels_path,
-                transform=get_val_augmentation()
+                image_folder=self.ingestion_artifact.val_images_path,
+                label_folder=self.ingestion_artifact.val_labels_path,
+                augmentation=get_val_augmentation()
             )
             
             test_dataset = CityscapesDataset(
-                image_dir=self.ingestion_artifact.test_images_path,
-                label_dir=self.ingestion_artifact.test_labels_path,
-                transform=get_val_augmentation()
+                image_folder=self.ingestion_artifact.test_images_path,
+                label_folder=self.ingestion_artifact.test_labels_path,
+                augmentation=get_val_augmentation()
             )
             
            
