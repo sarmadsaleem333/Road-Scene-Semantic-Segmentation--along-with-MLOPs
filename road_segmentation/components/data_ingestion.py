@@ -1,5 +1,3 @@
-# components/data_ingestion.py
-
 import os
 import sys
 from road_segmentation.entity.config_entity import DataIngestionConfig

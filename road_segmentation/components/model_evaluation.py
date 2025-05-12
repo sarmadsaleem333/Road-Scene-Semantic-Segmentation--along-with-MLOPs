@@ -1,54 +1,76 @@
-# components/model_evaluation.py
-
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
+import numpy as np
+import sys
 from tqdm import tqdm
-from models.model import get_deeplabv3_model
-from entity.config_entity import ModelEvaluationConfig
-from entity.artifact_entity import ModelTrainerArtifact, DataTransformationArtifact, ModelEvaluationArtifact
-from exception import RoadSegmentationException
 from road_segmentation.logger import logging
+from road_segmentation.exception import RoadSegmentationException
+from road_segmentation.entity.artifact_entity import ModelTrainerArtifact, DataTransformationArtifact, ModelEvaluationArtifact
+from road_segmentation.entity.config_entity import ModelEvaluationConfig
+from road_segmentation.models.DeepVLab3 import DeepLabV3Plus
 
-class ModelEvaluation:
-    def __init__(self, 
-                 config: ModelEvaluationConfig, 
-                 model_trainer_artifact: ModelTrainerArtifact, 
-                 data_artifact: DataTransformationArtifact):
+class ModelEvaluator:
+    def __init__(self, config: ModelEvaluationConfig, data_artifact: DataTransformationArtifact, model_artifact: ModelTrainerArtifact):
         self.config = config
-        self.model_trainer_artifact = model_trainer_artifact
         self.data_artifact = data_artifact
+        self.model_artifact = model_artifact
 
-    def evaluate(self, model, test_loader, device):
-        model.eval()
-        total_pixels = 0
-        correct_pixels = 0
-
-        with torch.no_grad():
-            for images, labels in tqdm(test_loader, desc="Evaluating"):
-                images = images.to(device)
-                labels = labels.to(device)
-
-                outputs = model(images)['out']
-                preds = outputs.argmax(dim=1)
-                correct_pixels += (preds == labels).sum().item()
-                total_pixels += torch.numel(labels)
-
-        pixel_accuracy = correct_pixels / total_pixels
-        return pixel_accuracy
-
-    def initiate(self) -> ModelEvaluationArtifact:
+    def evaluate(self):
         try:
-            logging.info("Starting model evaluation")
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            model = get_deeplabv3_model(num_classes=self.config.num_classes)
-            model.load_state_dict(torch.load(self.model_trainer_artifact.model_path, map_location=device))
-            model.to(device)
+            model = DeepLabV3Plus(num_classes=self.config.num_classes).to(device)
+            model.load_state_dict(torch.load(self.model_artifact.model_path, map_location=device))
+            model.eval()
 
-            pixel_acc = self.evaluate(model, self.data_artifact.test_loader, device)
+            val_loader = self.data_artifact.val_loader
+            criterion = nn.CrossEntropyLoss(ignore_index=255)
 
-            logging.info(f"Model Pixel Accuracy on test set: {pixel_acc:.4f}")
+            val_loss = 0
+            total_correct = 0
+            total_pixels = 0
+            confusion = np.zeros((self.config.num_classes, self.config.num_classes), dtype=np.int64)
 
-            return ModelEvaluationArtifact(pixel_accuracy=pixel_acc)
+            with torch.no_grad():
+                for images, labels in tqdm(val_loader, desc="Evaluating"):
+                    images, labels = images.to(device), labels.to(device).long()
+                    outputs = model(images)
+                    loss = criterion(outputs, labels)
+                    val_loss += loss.item()
+
+                    preds = outputs.argmax(dim=1)
+                    valid_mask = labels != 255
+                    correct = (preds == labels) & valid_mask
+                    total_correct += correct.sum().item()
+                    total_pixels += valid_mask.sum().item()
+
+                    labels_flat = labels.view(-1).cpu().numpy()
+                    preds_flat = preds.view(-1).cpu().numpy()
+                    valid_mask_flat = labels_flat != 255
+                    valid_labels = labels_flat[valid_mask_flat]
+                    valid_preds = preds_flat[valid_mask_flat]
+                    np.add.at(confusion, (valid_labels, valid_preds), 1)
+
+            avg_loss = val_loss / len(val_loader)
+            pixel_acc = total_correct / total_pixels if total_pixels > 0 else 0.0
+
+            iou_per_class = []
+            for c in range(self.config.num_classes):
+                TP = confusion[c, c]
+                FP = confusion[:, c].sum() - TP
+                FN = confusion[c, :].sum() - TP
+                total = TP + FP + FN
+                iou_c = TP / total if total > 0 else 0.0
+                iou_per_class.append(iou_c)
+            mIoU = np.mean(iou_per_class)
+
+            logging.info(f"Validation Loss: {avg_loss:.4f} | Pixel Accuracy: {pixel_acc:.4f} | mIoU: {mIoU:.4f}")
+
+            return ModelEvaluationArtifact(
+                model_path=self.model_artifact.model_path,
+                pixel_accuracy=pixel_acc,
+                mean_iou=mIoU
+            )
 
         except Exception as e:
-            raise RoadSegmentationException(e)
+            logging.error("Error during model evaluation.", exc_info=True)
+            raise RoadSegmentationException(e, sys)
