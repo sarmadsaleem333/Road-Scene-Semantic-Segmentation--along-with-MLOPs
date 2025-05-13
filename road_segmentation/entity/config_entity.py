@@ -39,3 +39,14 @@ class ModelPusherConfig:
     s3_model_key: str
     s3_metrics_key: str
 
+
+
+from dataclasses import dataclass
+
+@dataclass
+class PredictionConfig:
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_default_region: str
+    bucket_name: str
+    s3_model_key: str
