@@ -29,12 +29,11 @@ The SK-Fusion module improves feature representation by dynamically adjusting fe
 
 Our enhanced model achieves:
 
-- **mIoU**: 52% (8% improvement over baseline)
-- **Pixel Accuracy**: 90% (3% improvement over baseline)
+- **mIoU**: 52% 
+- **Pixel Accuracy**: 90% 
 
 Particularly strong improvements on challenging categories like poles, pedestrians, and traffic signs.
 
-![Segmentation Results](https://github.com/sarmadsaleem333/Road-Scene-Semantic-Segmentation--along-with-MLOPs/raw/main/assets/results.png)
 
 ## Requirements
 
@@ -99,7 +98,10 @@ To evaluate a trained model:
 
 Our MLOps pipeline ensures scalable, reproducible deployment with modular components:
 
-![MLOps Pipeline](https://github.com/sarmadsaleem333/Road-Scene-Semantic-Segmentation--along-with-MLOPs/raw/main/assets/mlops_pipeline.png)
+
+![image](https://github.com/user-attachments/assets/42184a2e-c4e6-4841-bb3f-74d9395bf02e)
+
+
 
 The pipeline consists of:
 
@@ -128,9 +130,6 @@ road_segmentation/
 ```
 ![image](https://github.com/user-attachments/assets/29e98400-3d0d-4285-8dbd-daed0c957e07)
 
-
-
-![image](https://github.com/user-attachments/assets/42184a2e-c4e6-4841-bb3f-74d9395bf02e)
 
 
 
